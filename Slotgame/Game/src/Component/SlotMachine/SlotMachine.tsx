@@ -1,21 +1,63 @@
 import React, { useState, useEffect } from "react";
 
 // Panda-Thema Symbole
-const symbols = ["🐼", "🍃", "🎋", "🥢", "🌿", "🍪", "🏆"];
+const symbols = ["🐼", "🍃", "🎋", "🥢", "🌿", "🍪", "💩"];
 const fallbackSymbols = ["Panda", "Leaf", "Bamboo", "Chopsticks", "Herb", "Cookie", "Trophy"];
 
 // Gewinnkombinationen für das Panda-Thema
 const winningCombinations: { [key: string]: number } = {
-  "🐼🐼🐼": 100,
+  "🐼🐼🐼": 200,
   "🍃🍃🍃": 50,
   "🎋🎋🎋": 40,
   "🥢🥢🥢": 30,
   "🌿🌿🌿": 25,
   "🍪🍪🍪": 20,
-  "🏆🏆🏆": 200,
+  "💩💩💩": 100,
   "🐼🎋🍃": 60,
   "🍃🥢🍪": 15,
   "🎋🐼🥢": 50,
+  "🐼🎋💩":150,
+  "🐼🍪💩":75,
+  "🐼🌿💩":75,
+  "🐼🍃💩":75,
+  "🐼💩🐼":25,
+  
+};
+
+// Funktion für die Übersetzungen
+const translations = {
+  en: {
+    balance: "Balance",
+    spin: "Spin 🎰",
+    spinning: "Spinning...",
+    autoSpin: "Auto-Spin",
+    autoSpinOn: "Auto-Spin On",
+    autoSpinOff: "Auto-Spin Off",
+    winMessage: "You have won: $",
+    noWinMessage: "Unfortunately, no win.",
+    bet: "Bet",
+    legend: "Show Legend",
+    hideLegend: "Hide Legend",
+    result: "Result",
+    lastGames: "Last 5 Games",
+    moreMoney: "Add More Money",
+  },
+  de: {
+    balance: "Guthaben",
+    spin: "Drehen 🎰",
+    spinning: "Dreht...",
+    autoSpin: "Auto-Spin",
+    autoSpinOn: "Auto-Spin Aktiv",
+    autoSpinOff: "Auto-Spin Aus",
+    winMessage: "Du hast gewonnen: $",
+    noWinMessage: "Leider kein Gewinn.",
+    bet: "Wette",
+    legend: "Zeige Legende",
+    hideLegend: "Schließe Legende",
+    result: "Ergebnis",
+    lastGames: "Die letzten 5 Spiele",
+    moreMoney: "Mehr Geld",
+  }
 };
 
 const getSymbol = (index: number, useFallback = false) => {
@@ -26,7 +68,6 @@ const SlotMachine: React.FC = () => {
   const [slots, setSlots] = useState<string[]>(["", "", ""]);
   const [spinning, setSpinning] = useState(false);
   const [loopSymbols, setLoopSymbols] = useState<string[]>(["", "", ""]);
-  const [,] = useState<NodeJS.Timeout[]>([]);
   const [balance, setBalance] = useState(100);
   const [bet, setBet] = useState(1);
   const [autoSpin, setAutoSpin] = useState(false);
@@ -35,6 +76,7 @@ const SlotMachine: React.FC = () => {
   const [winEffect, setWinEffect] = useState(false);
 
   const [showLegend, setShowLegend] = useState(false); // Zustand für Legende
+  const [language, setLanguage] = useState<'en' | 'de'>('de'); // Sprachzustand
 
   const spinReel = (index: number, delay: number) => {
     let counter = Math.floor(Math.random() * symbols.length);
@@ -70,51 +112,56 @@ const SlotMachine: React.FC = () => {
 
   const startSpin = () => {
     if (balance < bet) {
-      alert("Nicht genug Guthaben!");
+      alert(language === 'de' ? "Nicht genug Guthaben!" : "Not enough balance!");
       return;
     }
-
+  
     setSpinning(true);
     setSlots(["", "", ""]);
     setLoopSymbols(["", "", ""]);
-
+  
     setBalance((prev) => prev - bet);
-
+  
     spinReel(0, 1000);
     spinReel(1, 1500);
     spinReel(2, 2000);
-
+  
     setTimeout(() => {
       setSpinning(false);
     }, 2100);
   };
+  
 
   const calculateWin = () => {
     const combination = slots.join("");
     const winAmount = winningCombinations[combination];
-
-    const delay = winAmount ? 1200 : 500; // Wenn Gewinn, längere Pause
-
+  
+  
     setTimeout(() => {
       if (winAmount) {
         const totalWin = winAmount * bet;
         setBalance((prev) => prev + totalWin);
-        setWinMessage(`Du hast gewonnen: $${totalWin}!`);
+        setWinMessage(language === 'de' ? `Du hast gewonnen: $${totalWin}!` : `You won: $${totalWin}!`);
         setHistory((prev) => [
-          `Wette: $${bet} | Gewinn: $${totalWin} | Kombination: ${slots.join(" | ")}`,
+          `${language === 'de' ? "Wette" : "Bet"}: $${bet} | ${language === 'de' ? "Gewinn" : "Win"}: $${totalWin} | ${language === 'de' ? "Kombination" : "Combination"}: ${slots.join(" | ")}`,
           ...prev,
         ]);
-        setWinEffect(true); //  Animation aktivieren
-        setTimeout(() => setWinEffect(false), 1200); // Animation nach 1.2s zurücksetzen
-      } else {
-        setWinMessage("Leider kein Gewinn.");
+        setSpinning(false);
+        setAutoSpin(false);
+        setWinEffect(true); // Animation aktivieren
+        setTimeout(() => setWinEffect(false), 1500); // Animation nach 0.5s zurücksetzen // Stoppt Auto-Spin nach einem Gewinn
+      } 
+      else {
+        setWinMessage(language === 'de' ? "Leider kein Gewinn." : "No win.");
         setHistory((prev) => [
-          `Wette: $${bet} | Kein Gewinn | Kombination: ${slots.join(" | ")}`,
+          `${language === 'de' ? "Wette" : "Bet"}: $${bet} | ${language === 'de' ? "Kein Gewinn" : "No Win"} | ${language === 'de' ? "Kombination" : "Combination"}: ${slots.join(" | ")}`,
           ...prev,
         ]);
       }
-    }, delay); // Verzögerung nach Gewinn (länger bei Gewinn)
+    }, 500); // Verzögerung nach Gewinn (länger bei Gewinn)
   };
+
+
 
   const changeBet = (amount: number) => {
     setBet(amount);
@@ -126,6 +173,10 @@ const SlotMachine: React.FC = () => {
 
   const toggleLegend = () => {
     setShowLegend((prev) => !prev); // Toggle Legende
+  };
+
+  const toggleLanguage = () => {
+    setLanguage((prev) => (prev === 'de' ? 'en' : 'de'));
   };
 
   useEffect(() => {
@@ -159,17 +210,25 @@ const SlotMachine: React.FC = () => {
 
   const handleBank = () => {
     setBalance(balance + 100);
-  }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen select-none bg-gradient-to-br from-black via-gray-900 to-black text-white font-mono">
-      <div className="absolute top-4 left-4 text-xl font-semibold text-white/80">
+      <button
+        onClick={toggleLanguage}
+        className="absolute top-4 right-4 px-4 py-2 border border-white/30 text-white rounded-xl transition duration-300"
+      >
+        {language === 'de' ? 'Switch to English' : 'Wechsel zu Deutsch'}
+      </button>
+
+      <div className="top-4 left-4 text-xl font-semibold z-100">
         <div className="top-4 left-4 text-2xl justify-center p-2 font-semibold absolute text-green-400 flex items-center gap-1 drop-shadow-md">
-          {balance + "x"} 
+          {balance + "x"}
           <img className="w-10 h-10" src="coin.webp" alt="coin" />
         </div>
       </div>
 
-      <div className="text-5xl mb-12 font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 drop-shadow-lg">
+      <div className="text-5xl mb-12 font-extrabold mt-20 bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 drop-shadow-lg">
         🐼 Panda Slots
       </div>
 
@@ -177,9 +236,9 @@ const SlotMachine: React.FC = () => {
         {[0, 1, 2].map((i) => (
           <div
             key={i}
-            className={`w-28 h-28 sm:w-36 sm:h-36 border-4 rounded-2xl flex items-center justify-center text-5xl 
+            className={`w-28 h-28 sm:w-36 sm:h-36 border-4 rounded-2xl scale-100  flex items-center justify-center text-5xl 
     bg-black/30 backdrop-blur-md shadow-inner shadow-black transition-all duration-500 hover:scale-105
-    ${winEffect ? "animate-pulse border-green-400 shadow-[0_0_20px_#22c55e]" : "border-white/20"}`}
+    ${winEffect ? "animate-pulse border-green-400 scale-110  shadow-[0_0_20px_#22c55e]" : "border-white/20"}`}
           >
             {loopSymbols[i] || getSymbol(i)}
           </div>
@@ -187,15 +246,15 @@ const SlotMachine: React.FC = () => {
       </div>
 
       <div className="flex space-x-4 mb-6">
-        {[1, 5, 10,25].map((amount) => (
+        {[1, 5, 10, 25].map((amount) => (
           <button
             key={amount}
             onClick={() => changeBet(amount)}
             className={`px-6 py-2 border rounded-xl transition duration-300
         ${bet === amount
                 ? "border-pink-500 shadow-[0_0_12px_#ec4899] text-pink-300 font-bold"
-                : "border-white/30 hover:border-pink-400 hover:shadow-[0_0_12px_#ec4899]"
-              }`}
+                : "border-white/30 hover:border-pink-400 hover:shadow-[0_0_12px_#ec4899]"}`
+            }
           >
             ${amount}
           </button>
@@ -210,7 +269,7 @@ const SlotMachine: React.FC = () => {
             : "border-white/30 hover:border-yellow-300 hover:shadow-[0_0_12px_#facc15]"
             } text-white rounded-xl transition duration-300`}
         >
-          {autoSpin ? "Auto-Spin Aktiv" : "Auto-Spin Aus"}
+          {autoSpin ? translations[language].autoSpinOn : translations[language].autoSpinOff}
         </button>
 
         <button
@@ -218,52 +277,59 @@ const SlotMachine: React.FC = () => {
           disabled={spinning}
           className={`px-6 py-2 border border-white/30 text-white rounded-xl transition duration-300 ${spinning
             ? "opacity-50 cursor-not-allowed"
-            : "hover:border-green-400 hover:shadow-[0_0_12px_#22c55e]"}`
-          }
+            : "hover:border-green-400 hover:shadow-[0_0_12px_#22c55e]"}`}
         >
-          {spinning ? "Dreht..." : "Spin 🎰"}
+          {spinning ? (language === 'de' ? "Dreht..." : "Spinning...") : (language === 'de' ? "Spin 🎰" : "Spin 🎰")}
         </button>
       </div>
 
-      <div className="mt-2 text-lg text-yellow-400 font-semibold">{winMessage}</div>
-
-      <div className="mt-6 text-xl text-pink-300">
-        {slots.every(Boolean) && `Ergebnis: ${slots.join(" | ")}`}
+      <div className="flex flex-col items-center space-y-4 mb-6">
+        <div className="text-lg font-semibold">{translations[language].result}</div>
+        <div className="text-xl font-bold">{winMessage}</div>
       </div>
 
-      {/* Legend Button */}
-      <button
-        onClick={toggleLegend}
-        className="px-6 py-2 border border-white/30 text-white rounded-xl transition duration-300 mt-4"
-      >
-        {showLegend ? "Schließe Legende" : "Zeige Legende"}
-      </button>
+      <div className="flex flex-col items-center mb-6">
+        <button
+          onClick={handleBank}
+          className="px-6 py-2 border border-green-400 text-green-400 font-semibold rounded-xl hover:bg-green-400/20 transition duration-300"
+        >
+          {translations[language].moreMoney}
+        </button>
+      </div>
 
-      {/* Gewinnkombinationen Legend */}
+      <div className="flex items-center mb-6">
+        <button
+          onClick={toggleLegend}
+          className="text-sm text-gray-300 underline hover:text-white transition duration-300"
+        >
+          {showLegend ? translations[language].hideLegend : translations[language].legend}
+        </button>
+      </div>
+
       {showLegend && (
-        <div className="mt-4 w-full max-w-md px-4 text-sm text-white/70">
-          <h3 className="font-semibold text-lg mb-2">Gewinnkombinationen:</h3>
-          <ul>
-            {Object.entries(winningCombinations).map(([combination, win], index) => (
-              <li className="flex justify-center duration-500 items-center text-[1.4rem]" key={index}>
-                {combination}: ${win}
-              </li>
+        <div className="mb-12">
+          <div className="grid grid-cols-3 gap-4">
+            {Object.keys(winningCombinations).map((combination) => (
+              <div
+                key={combination}
+                className="flex items-center justify-between px-4 py-2 bg-black/40 border border-white/30 rounded-xl"
+              >
+                <div>{combination}</div>
+                <div>{`$${winningCombinations[combination]}`}</div>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       )}
 
-      <div className="mt-6 w-full max-w-sm px-4">
-        <h2 className="font-bold text-white/70 text-sm mb-1">Die letzten 5 Spiele:</h2>
-        <ul className="text-sm text-gray-400 space-y-1">
-          {history.slice(0, 5).map((entry, index) => (
-            <li key={index}>• {entry}</li>
+      <div className="mb-12">
+        <div className="text-xl font-semibold mb-4">{translations[language].lastGames}</div>
+        <ul className="space-y-2 text-sm text-gray-300">
+          {history.slice(0, 5).map((game, index) => (
+            <li key={index}>{game}</li>
           ))}
         </ul>
       </div>
-      <button onClick={handleBank} className="border px-4 py-2 rounded-2xl mt-10 border-white text-white cursor-pointer hover:scale-110 duration-300 hover:border-pink-500 hover:shadow-[0_0_12px_#ec4899] hover:text-pink-300 font-bold">
-        Mehr Geld
-      </button>
     </div>
   );
 };
