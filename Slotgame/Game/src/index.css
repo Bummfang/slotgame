@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+* {
+    font-family: 'Segoe UI Emoji', 'Arial', sans-serif;
+  }
+  @keyframes spin-reel {
+    0% {
+      transform: translateY(0);
+    }
+    100% {
+      transform: translateY(-100%);
+    }
+  }
+  
+  .animate-spin-reel {
+    animation: spin-reel 0.5s infinite linear;
+  }
+
+  @keyframes rotate-subtle {
+    0% {
+      transform: rotate(0deg);
+    }
+    50% {
+      transform: rotate(3deg);
+    }
+    100% {
+      transform: rotate(-3deg);
+    }
+  }
+
+  .glass-effect {
+    background: rgba(0, 0, 0, 0.5); /* Halbe Transparenz */
+    backdrop-filter: blur(10px); /* Weichzeichner für den Hintergrund */
+    border-radius: 20px; /* Abgerundete Ecken für den Glaseffekt */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Leichter Schatten für Tiefe */
+  }
+
+  .coin-wrapper {
+    perspective: 1000px; /* Ermöglicht den 3D-Effekt */
+  }
+  
+  .coin {
+    animation: spin 3s infinite linear; /* Endlosschleife für die 3D-Drehung */
+    transform-origin: center; /* Der Mittelpunkt des Bildes */
+  }
+  
+  @keyframes spin {
+    0% {
+      transform: rotate3d(1, 0, 0, 0deg); /* Startposition: keine Rotation */
+    }
+    50% {
+      transform: rotate3d(1, 0, 0, 180deg); /* Rotation um die X-Achse */
+    }
+    100% {
+      transform: rotate3d(1, 0, 0, 360deg); /* Volle Rotation um die X-Achse */
+    }
+  }
+  
+  
